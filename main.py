@@ -116,11 +116,12 @@ for i, row in enumerate(balances):
     if float(line.balance) < 0.001:
         continue
 
-    print("Aggregating stats for", base.code)
+    print(f"Aggregating stats for {base.code} ({line.balance} held):")
 
     rows = []
     try:
         start = last_year
+        # Daily candle for a whole year => ~365 records so we need to paginate.
         while today - start > datetime.timedelta(hours=1):
             agg = server.trade_aggregations(
                 base=base,
@@ -154,7 +155,7 @@ for i, row in enumerate(balances):
         c: Candle = candle      # helps with editor hinting
         value = float(c.line.balance) * float(c.close)
         values[c.timestamp][str(c.asset)] = value
-        # print(f"[DEBUG] {str(c.asset)} was worth ${value} on {c.date}")
+        # print(f"[DEBUG] {c.line.balance} {c.asset.code} was worth ${value} on {c.date}")
 
 print("Accumulating and plotting portfolio value for", ACCOUNT)
 
@@ -165,6 +166,10 @@ baseline = [ row for row in balances if row["asset"] == USDC ] or 0
 if baseline:
     baseline = float(baseline[0]["balance"] )
     # print(f"[DEBUG] Using ${baseline} USDC as portfolio baseline.")
+
+# ensure that we plot in ascending timestamp order, since certain assets may or
+# may not have existed at all points in time
+values = { ts: values[ts] for ts in sorted(values) }
 
 xaxis = [datetime.date.fromtimestamp(float(k) / 1000) for k in values.keys()]
 yaxis = [baseline + sum(group.values()) for group in values.values()]
