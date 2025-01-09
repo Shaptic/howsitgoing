@@ -10,6 +10,10 @@ pip install -r requirements.txt
 python main.py '[your G... account here]'
 ```
 
+Here's an example output plot from an arbitrary user with a bunch of different holdings:
+
+![an example output plot](example.png)
+
 ## Purpose
 
 The purpose of this script is to answer a simple question about one's portfolio:

@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import datetime
 import argparse
+import time
 import sys
 
 import stellar_sdk as sdk
@@ -40,10 +41,12 @@ class BalanceLine:
     balance: str            # example: '0.0000000',
     buying_liabilities: str # example: '0.0000000',
     is_authorized: bool     # example: True,
-    is_authorized_to_maintain_liabilities: str # example: True,
+    is_authorized_to_maintain_liabilities: bool # example: True,
     last_modified_ledger: int   # example: 40905685,
     limit: str                  # example: '922337203685.4775807',
-    selling_liabilities: str    # example: '0.0000000'},
+    selling_liabilities: str    # example: '0.0000000'
+
+    is_clawback_enabled: Optional[bool] = False
 
     def __repr__(self):
         return f"{self.asset_code}:{self.asset_issuer[:7]}: {float(self.balance):.3f}"
@@ -123,13 +126,21 @@ for i, row in enumerate(balances):
         start = last_year
         # Daily candle for a whole year => ~365 records so we need to paginate.
         while today - start > datetime.timedelta(hours=1):
-            agg = server.trade_aggregations(
-                base=base,
-                counter=USDC,
-                resolution=86400000,
-                start_time=int(1000 * start.timestamp()),
-                end_time=int(1000 * today.timestamp()),
-            ).limit(47).call()
+            try:
+                agg = server.trade_aggregations(
+                    base=base,
+                    counter=USDC,
+                    resolution=86400000,
+                    start_time=int(1000 * start.timestamp()),
+                    end_time=int(1000 * today.timestamp()),
+                ).limit(100).call()
+            except sdk.exceptions.BadRequestError as e:
+                if str(e).find("429") != -1: # lazy af
+                    print("Rate limits exceeded, waiting a minute...")
+                    time.sleep(60)
+                    continue
+                else:
+                    raise e
 
             new_rows = agg["_embedded"]["records"]
             if not rows and not new_rows:
@@ -175,7 +186,7 @@ xaxis = [datetime.date.fromtimestamp(float(k) / 1000) for k in values.keys()]
 yaxis = [baseline + sum(group.values()) for group in values.values()]
 
 plt.xlabel("Time")
-plt.xticks(rotation=90)
+plt.xticks(rotation=45)
 plt.ylabel("Value in USDC")
 plt.title(f"Portfolio value from ({last_year.strftime('%Y-%m-%d')} to {today.strftime('%Y-%m-%d')})")
 plt.plot(xaxis, yaxis, label="Portfolio")
