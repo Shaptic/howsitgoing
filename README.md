@@ -1,6 +1,6 @@
 # How's it going?
 
-Figure out the historical value of your current holdings with this one weird trick:
+Figure out the historical value of your current Stellar holdings with this one weird trick:
 
 ```bash
 python -m venv .venv
@@ -10,7 +10,7 @@ pip install -r requirements.txt
 python main.py '[your G... account here]'
 ```
 
-Here's an example output plot from an arbitrary user with a bunch of different holdings:
+Here's an example output plot from an arbitrary user found via stellar.expert with a bunch of different holdings:
 
 ![an example output plot](example.png)
 
@@ -20,7 +20,7 @@ The purpose of this script is to answer a simple question about one's portfolio:
 
 > How's it going?
 
-It's easy to see a snapshot of your portfolio's _current_ total value in wallet apps like Lobstr or Stellar.Expert, but it's much harder to observe portfolio _performance_ for some reason.
+It's easy to see a snapshot of your portfolio's _current_ total value in wallet apps like Lobstr or Freighter, but it's much harder to observe portfolio _performance_.
 
 This script, given an account address, evalutes its fluctuation in value over the past year.
 
